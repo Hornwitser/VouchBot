@@ -10,15 +10,20 @@ def no_ping(msg):
 
 bot = Bot(command_prefix='!')
 
+async def log(msg):
+    channel = utils.get(bot.get_all_channels(), id=config.log)
+    await channel.send(msg)
+
 @bot.command(pass_context=True)
 async def vouch(ctx, member: Member):
     role = utils.get(ctx.message.author.roles, id=config.role)
     if role is not None:
         if not member.bot:
             if utils.get(member.roles, id=config.role) is None:
+                mb, at = member.mention, ctx.message.author.mention
                 await member.add_roles(role)
-                msg = ("{} has been vouched for by {}."
-                       "".format(member.mention, ctx.message.author.mention))
+                await log("{} vouched {} as member".format(at, mb))
+                msg = ("{} has been vouched as member by {}.".format(mb, at))
             else:
                 msg = "{} is already vouched.".format(member.mention)
         else:
