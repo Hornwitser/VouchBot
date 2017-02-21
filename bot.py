@@ -13,9 +13,15 @@ bot = Bot(command_prefix='!')
 @bot.command(pass_context=True)
 async def vouch(ctx, member: Member):
     role = utils.get(ctx.message.author.roles, id=config.role)
-    if role:
-        await member.add_roles(role)
-        await ctx.send("Field promotion {}".format(member.name))
+    if role is not None:
+        if not member.bot:
+            if utils.get(member.roles, id=config.role) is None:
+                await member.add_roles(role)
+                await ctx.send("Field promotion {}".format(member.name))
+            else:
+                await ctx.send("{} is already vouched.".format(member.name))
+        else:
+            await ctx.send("I'm sorry Dave, I'm afraid I can't do that.")
     else:
         await ctx.send("Your authority is not recongnized")
 
