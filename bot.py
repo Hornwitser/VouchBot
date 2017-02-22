@@ -14,7 +14,7 @@ async def log(msg):
     channel = utils.get(bot.get_all_channels(), id=config.log)
     await channel.send(msg)
 
-@bot.command(pass_context=True)
+@bot.command()
 async def vouch(ctx, member: Member):
     role = utils.get(ctx.message.author.roles, id=config.role)
     if role is not None:
@@ -33,7 +33,7 @@ async def vouch(ctx, member: Member):
 
     await ctx.send(msg)
 
-@bot.command(pass_context=True)
+@bot.command()
 async def roles(ctx):
     msg = []
     for role in ctx.message.guild.roles:
