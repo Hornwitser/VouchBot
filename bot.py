@@ -1,8 +1,15 @@
 from discord import Member, utils
-from discord.ext.commands import Bot
+from discord.ext.commands import Bot, check
 
 import config
 
+
+def has_role(id):
+    def predicate(ctx):
+        role = utils.get(ctx.author.roles, id=id)
+        return role is not None
+
+    return check(predicate)
 
 def no_ping(msg):
     msg = msg.replace('@everyone', '@\u200beveryone')
@@ -34,6 +41,7 @@ async def vouch(ctx, member: Member):
     await ctx.send(msg)
 
 @bot.command()
+@has_role(config.admin)
 async def roles(ctx):
     msg = []
     for role in ctx.message.guild.roles:
