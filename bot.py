@@ -1,3 +1,5 @@
+import aiohttp
+
 from discord import Member, utils
 from discord.ext.commands import Bot, check
 
@@ -47,5 +49,23 @@ async def roles(ctx):
     for role in ctx.message.guild.roles:
         msg.append("{}: {}".format(role.name, role.id))
     await ctx.send(no_ping("\n".join(msg)))
+
+@bot.command()
+@has_role(config.admin)
+async def name(ctx, new_name: str):
+    await bot.user.edit(username=new_name)
+    await ctx.send(no_ping("Changed name to {}.".format(new_name)))
+
+@bot.command()
+@has_role(config.admin)
+async def avatar(ctx):
+    att = ctx.message.attachments
+    if len(att) == 1:
+        async with aiohttp.get(att[0]['proxy_url']) as resp:
+            avatar = await resp.read()
+            await bot.user.edit(avatar=avatar)
+            await ctx.send("Avatar changed.")
+    else:
+        await ctx.send("You need to upload the avatar with the command.")
 
 bot.run(config.token)
