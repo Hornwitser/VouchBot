@@ -17,7 +17,7 @@ def no_ping(msg):
     msg = msg.replace('@everyone', '@\u200beveryone')
     return msg.replace('@here', '@\u200bhere')
 
-bot = Bot(command_prefix='!')
+bot = Bot(command_prefix='!', help_attrs={'name':config.help})
 
 async def log(msg):
     channel = utils.get(bot.get_all_channels(), id=config.log)
