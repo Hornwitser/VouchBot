@@ -3,6 +3,23 @@ import aiohttp
 from discord import Member, utils
 from discord.ext.commands import Bot, check
 
+
+config_template = '''# Vouchbot config
+token = "your.bot.token"
+help = "vhelp"
+role = <role-id-to-grant>
+log = <channel-id-to-log-to>
+admin = <admin-role-id>
+'''
+
+import os.path
+if not os.path.exists("config.py"):
+    import sys
+    print("config.py not found. Writing template...")
+    with open('config.py', 'w') as f:
+        f.write(config_template)
+    sys.exit()
+
 import config
 
 
