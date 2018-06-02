@@ -22,6 +22,9 @@ if not os.path.exists("config.py"):
 
 import config
 
+# Can't use commands.is_owner because that doesn't let me easily reuse it
+async def is_bot_owner(ctx):
+    return await ctx.bot.is_owner(ctx.author)
 
 def has_role(id):
     def predicate(ctx):
@@ -68,14 +71,16 @@ async def roles(ctx):
     await ctx.send(no_ping("\n".join(msg)))
 
 @bot.command()
-@has_role(config.admin)
+@check(is_bot_owner)
 async def name(ctx, new_name: str):
+    """Set the bot's name"""
     await bot.user.edit(username=new_name)
     await ctx.send(no_ping("Changed name to {}.".format(new_name)))
 
 @bot.command()
-@has_role(config.admin)
+@check(is_bot_owner)
 async def avatar(ctx):
+    """Set bot avatar to the image uploaded"""
     att = ctx.message.attachments
     if len(att) == 1:
         async with aiohttp.get(att[0]['proxy_url']) as resp:
