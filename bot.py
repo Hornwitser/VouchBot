@@ -1,7 +1,8 @@
 import aiohttp
 
-from discord import Member, utils
-from discord.ext.commands import Bot, check
+from discord import HTTPException, Member, utils
+from discord.ext.commands import \
+    Bot, CheckFailure, CommandInvokeError, UserInputError, check
 
 
 config_template = '''# Vouchbot config
@@ -89,5 +90,28 @@ async def avatar(ctx):
             await ctx.send("Avatar changed.")
     else:
         await ctx.send("You need to upload the avatar with the command.")
+
+@bot.event
+async def on_command_error(ctx, error):
+    itis = lambda cls: isinstance(error, cls)
+    if itis(CommandInvokeError): reaction = "\N{COLLISION SYMBOL}"
+    elif itis(CheckFailure): reaction = "\N{NO ENTRY SIGN}"
+    elif itis(UserInputError): reaction = "\N{BLACK QUESTION MARK ORNAMENT}"
+    else: reaction = None
+
+    if reaction is not None:
+        try:
+            await ctx.message.add_reaction(reaction)
+        except HTTPException:
+            if ctx.channel.permissions_for(ctx.me).send_messages:
+                try:
+                    await ctx.send(reaction)
+                except:
+                    pass
+
+    if itis(CommandInvokeError):
+        print("Exception in command {}:".format(ctx.command), file=stderr)
+        print_exception(type(error), error, error.__traceback__, file=stderr)
+
 
 bot.run(config.token)
