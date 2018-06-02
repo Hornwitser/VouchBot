@@ -1,5 +1,5 @@
 # Sensitive config
-config.py
+config.json
 
 # Cache files for python
 __pycache__/
