@@ -44,6 +44,15 @@ async def log(msg):
     channel = utils.get(bot.get_all_channels(), id=config.log)
     await channel.send(msg)
 
+class NoReplyPermission(CheckFailure):
+    pass
+
+@bot.check
+async def can_reply(ctx):
+    if not ctx.channel.permissions_for(ctx.me).send_messages:
+        raise NoReplyPermission("Bot can't reply")
+    return True
+
 @bot.command()
 async def vouch(ctx, member: Member):
     role = utils.get(ctx.message.author.roles, id=config.role)
@@ -95,6 +104,7 @@ async def avatar(ctx):
 async def on_command_error(ctx, error):
     itis = lambda cls: isinstance(error, cls)
     if itis(CommandInvokeError): reaction = "\N{COLLISION SYMBOL}"
+    elif itis(NoReplyPermission): reaction = "\N{ZIPPER-MOUTH FACE}"
     elif itis(CheckFailure): reaction = "\N{NO ENTRY SIGN}"
     elif itis(UserInputError): reaction = "\N{BLACK QUESTION MARK ORNAMENT}"
     else: reaction = None
