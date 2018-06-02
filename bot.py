@@ -46,8 +46,16 @@ except OSError:
             'log-channel-id': old_config.log,
         }
 
-    write_config()
-    print("migrated config.json written, you should delete config.py now")
+        write_config()
+        print("migrated config.json written, you should delete config.py now")
+
+    else:
+        config['bot-token'] = '<your bot token>'
+        config['help-command'] = 'vhelp'
+
+        write_config()
+        print("new config.json written, please configure it and restart")
+        exit(1)
 
 # Auto create entries for guilds on first usage
 config['guilds'] = defaultdict(lambda: {}, config['guilds'])
