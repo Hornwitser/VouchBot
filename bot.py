@@ -5,8 +5,11 @@ from discord.ext.commands import \
 
 from collections import defaultdict
 import json
+from logging import basicConfig, INFO
 from sys import exit, stderr
 from traceback import print_exception
+
+basicConfig(level=INFO)
 
 
 def write_config():
