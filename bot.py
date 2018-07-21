@@ -1,16 +1,16 @@
-import aiohttp
-from discord import HTTPException, TextChannel, Member, Role, utils
-from discord.ext.commands import \
-    Bot, CheckFailure, CommandInvokeError, UserInputError, check, guild_only
-
 from collections import defaultdict
 import json
 from logging import basicConfig, INFO
 from sys import exit, stderr
 from traceback import print_exception
 
-basicConfig(level=INFO)
+import aiohttp
+from discord import HTTPException, TextChannel, Member, Role, utils
+from discord.ext.commands import \
+    Bot, CheckFailure, CommandInvokeError, UserInputError, check, guild_only
 
+
+basicConfig(level=INFO)
 
 def write_config():
     with open('config.json', 'w') as config_file:
@@ -174,7 +174,7 @@ async def vouch(ctx, member: Member):
 @bot.command(name='set-admin-role')
 @guild_only()
 @check(is_guild_owner)
-async def set_admin_role(ctx, role: Role=None):
+async def set_admin_role(ctx, role: Role = None):
     """Role granting access to guild settings on the bot"""
     if role is not None:
         if not role.is_default():
@@ -195,7 +195,7 @@ async def set_admin_role(ctx, role: Role=None):
 @bot.command(name='set-grant-role')
 @guild_only()
 @check(is_admin)
-async def set_grant_role(ctx, role: Role=None):
+async def set_grant_role(ctx, role: Role = None):
     """Role bot grants upon successful vouching"""
     if role is not None:
         if not role.is_default():
@@ -216,7 +216,7 @@ async def set_grant_role(ctx, role: Role=None):
 @bot.command(name='set-log-channel')
 @guild_only()
 @check(is_admin)
-async def set_log_channel(ctx, ch: TextChannel=None):
+async def set_log_channel(ctx, ch: TextChannel = None):
     """Channel vouches are logged to"""
     if ch is not None:
         config['guilds'][str(ctx.guild.id)]['log-channel-id'] = str(ch.id)
@@ -292,12 +292,11 @@ async def on_command_error(ctx, error):
             if ctx.channel.permissions_for(ctx.me).send_messages:
                 try:
                     await ctx.send(reaction)
-                except:
+                except HTTPException:
                     pass
 
     if itis(CommandInvokeError):
         print("Exception in command {}:".format(ctx.command), file=stderr)
         print_exception(type(error), error, error.__traceback__, file=stderr)
-
 
 bot.run(config['bot-token'])
