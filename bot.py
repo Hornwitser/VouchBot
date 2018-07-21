@@ -239,7 +239,10 @@ async def set_bot_nick(ctx, *, nick=None):
     """Set the nickname of the bot for this guild"""
     if ctx.me.guild_permissions.change_nickname:
         await ctx.me.edit(nick=nick)
-        await ctx.send(no_ping("Changed nick to {}".format(nick)))
+        if nick is not None:
+            await ctx.send(no_ping("Changed nick to {}".format(nick)))
+        else:
+            await ctx.send("Reset nick")
     else:
         await ctx.send("\N{NO ENTRY} Bot does not have permission "
                        "to change nickname")
