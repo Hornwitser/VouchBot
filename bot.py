@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import chain
 import json
 from logging import basicConfig, INFO
 from sys import exit, stderr
@@ -31,12 +32,23 @@ except OSError:
     config = {
         'bot-token': '<your-bot-token>',
         'help-command': 'vhelp',
+        'global': {
+            'guild-command-prefixes': ['<@{bot_id}> ', '<@!{bot_id}> '],
+            'dm-command-prefixes': ['<@{bot_id}> ', ''],
+        },
         'guilds': { },
     }
 
     write_config()
     print("new config.json written, please configure it and restart")
     exit(1)
+
+if 'global' not in config:
+    print("Adding missing 'global' entry to config")
+    config['global'] = {
+        'guild-command-prefixes': ['<@{bot_id}> ', '<@!{bot_id}> '],
+        'dm-command-prefixes': ['<@{bot_id}> ', ''],
+    }
 
 # Auto create entries for guilds on first usage
 config['guilds'] = defaultdict(lambda: {}, config['guilds'])
@@ -132,7 +144,20 @@ async def send_and_warn(ctx, msg):
 class NoReplyPermission(CheckFailure):
     pass
 
-bot = Bot(command_prefix='!', help_attrs={'name':config['help-command']})
+def prefixes(bot, msg):
+    def prefix_format(prefix):
+        return prefix.format(bot_id=bot.user.id)
+
+    if msg.guild is not None:
+        defaults = config['global']['guild-command-prefixes']
+        guild = config['guilds'][str(msg.guild.id)].get('command-prefixes', [])
+        return chain(guild, map(prefix_format, defaults))
+
+    defaults = config['global']['dm-command-prefixes']
+    return map(prefix_format, defaults)
+
+
+bot = Bot(command_prefix=prefixes, help_attrs={'name':config['help-command']})
 
 @bot.check
 async def can_reply(ctx):
@@ -247,6 +272,25 @@ async def set_bot_nick(ctx, *, nick=None):
         await ctx.send("\N{NO ENTRY} Bot does not have permission "
                        "to change nickname")
 
+@bot.command(name='set-bot-prefixes')
+@guild_only()
+@check(is_admin)
+async def set_bot_prefix(ctx, *prefixes):
+    """Set the command prefixes of the bot for this guild"""
+    if prefixes:
+        config['guilds'][str(ctx.guild.id)]['command-prefixes'] = prefixes
+        msg = no_ping("Set bot command prefixes to {}"
+                      "".format(', '.join(prefixes)))
+
+    else:
+        try:
+            del config['guilds'][str(ctx.guild.id)]['command-prefixes']
+            msg = "Removed configured command prefixes"
+        except KeyError:
+            msg = "Command prefixes is not set"
+
+    await send_and_warn(ctx, msg)
+    write_config()
 
 @bot.command(name='check-config')
 @guild_only()
