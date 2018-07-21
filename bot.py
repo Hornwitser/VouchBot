@@ -23,7 +23,10 @@ try:
     with open('config.json') as config_file:
         config = json.load(config_file)
 except OSError:
-    import os.path
+    decision = input("Unable to load config.json, write a new one (y/N)? ")
+    if decision.lower() != "y":
+        print("Aborting")
+        exit(1)
 
     config = {
         'bot-token': '<your-bot-token>',
@@ -31,34 +34,9 @@ except OSError:
         'guilds': { },
     }
 
-    if os.path.exists('config.py'):
-        print("Old config format detected, attempting conversion")
-        import config as old_config
-
-        sid = input("Please provide the server-id used by the old config: ")
-        try: int(sid)
-        except ValueError:
-            print("Error, not a number")
-            exit(1)
-
-        config['bot-token'] = old_config.token
-        config['help-command'] = old_config.help
-        config['guilds'][sid] = {
-            'admin-role-id': old_config.admin,
-            'grant-role-id': old_config.role,
-            'log-channel-id': old_config.log,
-        }
-
-        write_config()
-        print("migrated config.json written, you should delete config.py now")
-
-    else:
-        config['bot-token'] = '<your bot token>'
-        config['help-command'] = 'vhelp'
-
-        write_config()
-        print("new config.json written, please configure it and restart")
-        exit(1)
+    write_config()
+    print("new config.json written, please configure it and restart")
+    exit(1)
 
 # Auto create entries for guilds on first usage
 config['guilds'] = defaultdict(lambda: {}, config['guilds'])
