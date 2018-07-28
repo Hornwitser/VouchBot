@@ -1,8 +1,5 @@
-from collections import defaultdict
 from itertools import chain
-import json
-from logging import basicConfig, INFO
-from sys import exit, stderr
+from sys import stderr
 from traceback import print_exception
 
 import aiohttp
@@ -11,51 +8,7 @@ from discord.ext.commands import \
     Bot as BotBase, CheckFailure, CommandInvokeError, UserInputError, check, \
     command, guild_only
 
-
-basicConfig(level=INFO)
-
-def write_config(config):
-    with open('config.json', 'w') as config_file:
-        # Note: uses dumps instead of dump as the latter can leave the
-        #       the config file in an incomplete state on exceptions
-        config_file.write(json.dumps(config, sort_keys=True, indent=4))
-
-
-def load_config():
-    try:
-        with open('config.json') as config_file:
-            config = json.load(config_file)
-    except OSError:
-        decision = input("Unable to load config.json, write a new one (y/N)? ")
-        if decision.lower() != "y":
-            print("Aborting")
-            exit(1)
-
-        config = {
-            'bot-token': '<your-bot-token>',
-            'help-command': 'vhelp',
-            'global': {
-                'guild-command-prefixes': ['<@{bot_id}> ', '<@!{bot_id}> '],
-                'dm-command-prefixes': ['<@{bot_id}> ', ''],
-            },
-            'guilds': { },
-        }
-
-        write_config(config)
-        print("new config.json written, please configure it and restart")
-        exit(1)
-
-    if 'global' not in config:
-        print("Adding missing 'global' entry to config")
-        config['global'] = {
-            'guild-command-prefixes': ['<@{bot_id}> ', '<@!{bot_id}> '],
-            'dm-command-prefixes': ['<@{bot_id}> ', ''],
-        }
-
-    # Auto create entries for guilds on first usage
-    config['guilds'] = defaultdict(lambda: {}, config['guilds'])
-
-    return config
+from config import write_config
 
 
 # Can't use commands.is_owner because that doesn't let me easily reuse it
@@ -374,11 +327,3 @@ class Bot(BotBase):
             print_exception(
                 type(error), error, error.__traceback__, file=stderr
             )
-
-if __name__ == '__main__':
-    config = load_config()
-    bot = Bot(
-        config, command_prefix=prefixes,
-        help_attrs={'name':config['help-command']}
-    )
-    bot.run(config['bot-token'])
