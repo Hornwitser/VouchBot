@@ -316,10 +316,11 @@ async def avatar(ctx):
     """Set bot avatar to the image uploaded"""
     att = ctx.message.attachments
     if len(att) == 1:
-        async with aiohttp.get(att[0]['proxy_url']) as resp:
-            avatar = await resp.read()
-            await bot.user.edit(avatar=avatar)
-            await ctx.send("Avatar changed.")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(att[0].proxy_url) as resp:
+                avatar = await resp.read()
+                await bot.user.edit(avatar=avatar)
+                await ctx.send("Avatar changed.")
     else:
         await ctx.send("You need to upload the avatar with the command.")
 
