@@ -76,7 +76,7 @@ def no_ping(msg):
     return msg.replace('@here', '@\u200bhere')
 
 async def log(ctx, msg):
-    channel_id = config['guilds'][str(ctx.guild.id)]['log-channel-id']
+    channel_id = config['guilds'][str(ctx.guild.id)].get('log-channel-id')
     if channel_id is not None:
         channel = ctx.guild.get_channel(int(channel_id))
         if channel is not None:
