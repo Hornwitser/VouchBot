@@ -305,7 +305,7 @@ async def check_config(ctx):
 
 @bot.command()
 @check(is_bot_owner)
-async def name(ctx, new_name: str):
+async def name(ctx, *, new_name: str):
     """Set the bot's name"""
     await bot.user.edit(username=new_name)
     await ctx.send(no_ping("Changed name to {}.".format(new_name)))
