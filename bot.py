@@ -5,8 +5,8 @@ from traceback import print_exception
 import aiohttp
 from discord import HTTPException, TextChannel, Member, Role, utils
 from discord.ext.commands import \
-    Bot as BotBase, CheckFailure, CommandInvokeError, UserInputError, check, \
-    command, guild_only
+    CheckFailure, Cog, CommandInvokeError, UserInputError, check, command, \
+    guild_only
 
 from config import write_config
 
@@ -117,25 +117,15 @@ def prefixes(bot, msg):
     return map(prefix_format, defaults)
 
 
-class Bot(BotBase):
-    async def can_reply(self, ctx):
+class Vouch(Cog):
+    async def bot_check(self, ctx):
         if not ctx.channel.permissions_for(ctx.me).send_messages:
             raise NoReplyPermission("Bot can't reply")
         return True
 
-    def __init__(self, config, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.my_config = config
-        self.check(self.can_reply)
-        self.add_command(self.vouch)
-        self.add_command(self.set_admin_role)
-        self.add_command(self.set_grant_role)
-        self.add_command(self.set_log_channel)
-        self.add_command(self.set_bot_nick)
-        self.add_command(self.set_bot_prefix)
-        self.add_command(self.check_config)
-        self.add_command(self.name)
-        self.add_command(self.avatar)
+    def __init__(self, config, bot):
+        self.bot = bot
+        self.bot.my_config = config
 
     @command()
     @guild_only()
@@ -147,7 +137,7 @@ class Bot(BotBase):
             return
 
         if member != ctx.author:
-            cfg = self.my_config
+            cfg = self.bot.my_config
             role_id = cfg['guilds'][str(ctx.guild.id)]['grant-role-id']
             role = utils.get(ctx.author.roles, id=int(role_id))
             if not member.bot:
@@ -175,7 +165,7 @@ class Bot(BotBase):
     @check(is_guild_owner)
     async def set_admin_role(self, ctx, role: Role = None):
         """Role granting access to guild settings on the bot"""
-        cfg = self.my_config
+        cfg = self.bot.my_config
         if role is not None:
             if not role.is_default():
                 arid = str(role.id)
@@ -191,14 +181,14 @@ class Bot(BotBase):
                 msg = "Admin role is not set"
 
         await send_and_warn(ctx, msg)
-        write_config(self.my_config)
+        write_config(self.bot.my_config)
 
     @command(name='set-grant-role')
     @guild_only()
     @check(is_admin)
     async def set_grant_role(self, ctx, role: Role = None):
         """Role bot grants upon successful vouching"""
-        cfg = self.my_config
+        cfg = self.bot.my_config
         if role is not None:
             if not role.is_default():
                 grid = str(role.id)
@@ -214,14 +204,14 @@ class Bot(BotBase):
                 msg = "Grant role is not set"
 
         await send_and_warn(ctx, msg)
-        write_config(self.my_config)
+        write_config(self.bot.my_config)
 
     @command(name='set-log-channel')
     @guild_only()
     @check(is_admin)
     async def set_log_channel(self, ctx, ch: TextChannel = None):
         """Channel vouches are logged to"""
-        cfg = self.my_config
+        cfg = self.bot.my_config
         if ch is not None:
             cfg['guilds'][str(ctx.guild.id)]['log-channel-id'] = str(ch.id)
             msg = "Set log channel to {}".format(ch.mention)
@@ -234,7 +224,7 @@ class Bot(BotBase):
                 msg = "Log channel is not set"
 
         await send_and_warn(ctx, msg)
-        write_config(self.my_config)
+        write_config(self.bot.my_config)
 
     @command(name='set-bot-nick')
     @guild_only()
@@ -256,7 +246,7 @@ class Bot(BotBase):
     @check(is_admin)
     async def set_bot_prefix(self, ctx, *prefixes):
         """Set the command prefixes of the bot for this guild"""
-        cfg = self.my_config
+        cfg = self.bot.my_config
         if prefixes:
             cfg['guilds'][str(ctx.guild.id)]['command-prefixes'] = prefixes
             msg = no_ping("Set bot command prefixes to {}"
@@ -270,7 +260,7 @@ class Bot(BotBase):
                 msg = "Command prefixes is not set"
 
         await send_and_warn(ctx, msg)
-        write_config(self.my_config)
+        write_config(self.bot.my_config)
 
     @command(name='check-config')
     @guild_only()
@@ -304,7 +294,7 @@ class Bot(BotBase):
         else:
             await ctx.send("You need to upload the avatar with the command.")
 
-    async def on_command_error(self, ctx, error):
+    async def cog_command_error(self, ctx, error):
         itis = lambda cls: isinstance(error, cls)
         if itis(CommandInvokeError): reaction = "\N{COLLISION SYMBOL}"
         elif itis(NoReplyPermission): reaction = "\N{ZIPPER-MOUTH FACE}"
