@@ -16,7 +16,7 @@ async def is_bot_owner(ctx):
     return await ctx.bot.is_owner(ctx.author)
 
 async def is_guild_owner(ctx):
-    return ctx.author.id == ctx.guild.owner.id or await is_bot_owner(ctx)
+    return ctx.author.id == ctx.guild.owner_id or await is_bot_owner(ctx)
 
 async def is_admin(ctx):
     if await is_guild_owner(ctx): return True
