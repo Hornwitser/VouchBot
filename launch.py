@@ -20,6 +20,9 @@ async def main():
     async def on_ready():
         nonlocal init
         if not init:
+            app = await client.application_info()
+            client.my_owner_id = app.owner.id
+
             guild = None # client.get_guild(ID)
             add_vouch_interactions(tree, guild)
             await tree.sync(guild=guild)

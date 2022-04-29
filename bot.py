@@ -12,14 +12,14 @@ from discord.utils import escape_mentions as no_ping
 from config import write_config
 
 
-async def is_bot_owner(ctx: Interaction):
-    return await ctx.client.is_owner(ctx.author)
+def is_bot_owner(ctx: Interaction):
+    return ctx.user.id == ctx.client.my_owner_id
 
-async def is_guild_owner(ctx: Interaction):
-    return ctx.user.id == ctx.guild.owner_id or await is_bot_owner(ctx)
+def is_guild_owner(ctx: Interaction):
+    return ctx.user.id == ctx.guild.owner_id or is_bot_owner(ctx)
 
-async def is_admin(ctx: Interaction):
-    if await is_guild_owner(ctx): return True
+def is_admin(ctx: Interaction):
+    if is_guild_owner(ctx): return True
     if ctx.guild_id is None: return False
 
     guild_cfg = ctx.client.my_cfg['guilds'][str(ctx.guild_id)]
