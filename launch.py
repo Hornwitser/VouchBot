@@ -1,8 +1,9 @@
 from asyncio import run
 from logging import basicConfig, INFO
 
-from discord import Client, Intents
+from discord import Client, Intents, Interaction, Permissions
 from discord.app_commands import CommandTree
+from discord.utils import oauth_url
 
 from config import load_config
 from bot import add_vouch_interactions
@@ -25,6 +26,16 @@ async def main():
 
             guild = None # client.get_guild(ID)
             add_vouch_interactions(tree, guild)
+            if "not guild" and app.bot_public:
+                @tree.command(guild=guild)
+                async def invite(ctx: Interaction):
+                    """Give an invite link for this bot"""
+                    await ctx.response.send_message(
+                        oauth_url(
+                            app.id,
+                            permissions=Permissions(manage_roles=True),
+                            scopes=["bot", "applications.commands"]),
+                        ephemeral=True)
             await tree.sync(guild=guild)
             init = True
 
