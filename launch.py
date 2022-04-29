@@ -11,7 +11,7 @@ from bot import add_vouch_interactions
 basicConfig(level=INFO)
 
 async def main():
-    client = Client(intents=Intents.default())
+    client = Client(intents=Intents(guilds=True))
     client.my_cfg = load_config()
     tree = CommandTree(client)
     init = False
