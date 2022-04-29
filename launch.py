@@ -1,17 +1,32 @@
+from asyncio import run
 from logging import basicConfig, INFO
 
-from discord.ext.commands import Bot
+from discord import Client, Intents
+from discord.app_commands import CommandTree
 
-from bot import Vouch, prefixes
 from config import load_config
+from bot import add_vouch_interactions
 
 
 basicConfig(level=INFO)
 
+async def main():
+    client = Client(intents=Intents.default())
+    client.my_cfg = load_config()
+    tree = CommandTree(client)
+    init = False
+
+    @client.event
+    async def on_ready():
+        nonlocal init
+        if not init:
+            guild = None # client.get_guild(ID)
+            add_vouch_interactions(tree, guild)
+            await tree.sync(guild=guild)
+            init = True
+
+    async with client:
+        await client.start(client.my_cfg['bot-token'])
+
 if __name__ == '__main__':
-    config = load_config()
-    bot = Bot(
-        command_prefix=prefixes, help_attrs={'name':config['help-command']}
-    )
-    bot.add_cog(Vouch(config, bot))
-    bot.run(config['bot-token'])
+    run(main())
